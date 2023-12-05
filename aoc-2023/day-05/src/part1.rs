@@ -1,27 +1,18 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use nom::{
     self,
     bytes::complete::tag,
-    character::complete::{self, alpha1, line_ending, multispace0, multispace1, space0, space1},
-    multi::{fold_many1, separated_list1},
-    sequence::{delimited, preceded, separated_pair, terminated, tuple},
+    character::complete::{self, alpha1, line_ending, multispace0, multispace1, space1},
+    multi::separated_list1,
+    sequence::{delimited, separated_pair},
     IResult,
 };
 
 #[derive(Debug)]
-struct SeedToSoilMap {
-    rows: Vec<Vec<u64>>,
-}
-
-#[derive(Debug)]
-struct SoilToFertilizerMap {
-    rows: Vec<Vec<u64>>,
-}
-#[derive(Debug)]
 struct Map<'a> {
-    entry: &'a str,
-    destination: &'a str,
+    _entry: &'a str,
+    _destination: &'a str,
     map: Vec<Vec<u64>>,
 }
 impl<'a> Map<'a> {
@@ -44,7 +35,7 @@ impl<'a> Map<'a> {
 
 fn parse_map(input: &str) -> IResult<&str, Map> {
     // dbg!(input);
-    let (input, (entry, destination)) = delimited(
+    let (input, (_entry, _destination)) = delimited(
         multispace0,
         separated_pair(alpha1, tag("-to-"), alpha1),
         tag(" map:"),
@@ -59,18 +50,11 @@ fn parse_map(input: &str) -> IResult<&str, Map> {
     Ok((
         input,
         Map {
-            entry,
-            destination,
+            _entry,
+            _destination,
             map: rows,
         },
     ))
-}
-
-#[derive(Debug)]
-struct LinkMap<'a> {
-    entry: &'a str,
-    destination: &'a str,
-    link_map: HashSet<(u64, u64, u64)>,
 }
 fn seed(input: &str) -> IResult<&str, HashSet<u64>> {
     let (input, seeds) = separated_list1(space1, complete::u64)(input)?;
