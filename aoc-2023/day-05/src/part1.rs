@@ -62,7 +62,7 @@ fn seed(input: &str) -> IResult<&str, HashSet<u64>> {
 }
 fn parse_input(input: &str) -> IResult<&str, u64> {
     let (input, seeds) = delimited(tag("seeds: "), seed, line_ending)(input)?;
-    dbg!(input, &seeds);
+    // dbg!(input, &seeds);
     let (input, maps) = separated_list1(multispace1, parse_map)(input)?;
     // dbg!(input, maps);
     Ok((
@@ -72,7 +72,7 @@ fn parse_input(input: &str) -> IResult<&str, u64> {
                 l_acc = map.next_link(l_acc);
                 l_acc
             });
-            dbg!(&location);
+            // dbg!(&location);
             acc = acc.min(location);
             acc
         }),
