@@ -124,7 +124,7 @@ pub fn process(input: &str) -> String {
             acc
         }),
     };
-    dbg!(&schematic.string_lines);
+    // dbg!(&schematic.string_lines);
     schematic.find_valid_and_sum().to_string()
 }
 #[cfg(test)]

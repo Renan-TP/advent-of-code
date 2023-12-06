@@ -57,7 +57,7 @@ fn parse_cards(input: &str) -> IResult<&str, Vec<Card>> {
 
 pub fn process(input: &str) -> String {
     let (_input, cards) = parse_cards(input).expect("parse cards");
-    dbg!(_input, &cards);
+    // dbg!(_input, &cards);
     cards
         .iter()
         .map(|card| card.get_point())
