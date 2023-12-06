@@ -23,13 +23,7 @@ impl Race {
     }
     fn get_win_case_with_math(&self) -> u64 {
         let discriminant = self.time.pow(2) - (4 * self.distance);
-        let range = ((self.time as f64 - (discriminant as f64).sqrt()) / 2f64)
-            ..((self.time as f64 + (discriminant as f64).sqrt()) / 2f64);
-        // dbg!(
-        //     &range,
-        //     (range.start.floor() as u64 + 1)..=(range.end.ceil() as u64 - 1)
-        // );
-        ((range.start.floor() as u64 + 1)..=(range.end.ceil() as u64 - 1)).count() as u64
+        (discriminant as f64).sqrt() as u64
     }
 }
 fn parse_line(input: &str) -> IResult<&str, u64> {

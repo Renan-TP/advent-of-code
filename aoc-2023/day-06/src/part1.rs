@@ -1,3 +1,5 @@
+use std::result;
+
 use nom::{
     character::complete::{self, multispace0, multispace1, space1},
     multi::separated_list1,
@@ -23,13 +25,7 @@ impl Race {
     }
     fn get_win_case_with_math(&self) -> u32 {
         let discriminant = self.time.pow(2) - (4 * self.distance);
-        let range = ((self.time as f32 - (discriminant as f32).sqrt()) / 2f32)
-            ..((self.time as f32 + (discriminant as f32).sqrt()) / 2f32);
-        // dbg!(
-        //     &range,
-        //     (range.start.floor() as u32 + 1)..=(range.end.ceil() as u32 - 1)
-        // );
-        ((range.start.floor() as u32 + 1)..=(range.end.ceil() as u32 - 1)).count() as u32
+        (discriminant as f32).sqrt().ceil() as u32
     }
 }
 fn parse_line(input: &str) -> IResult<&str, Vec<u32>> {
@@ -45,16 +41,21 @@ fn parse_input(input: &str) -> IResult<&str, Vec<Race>> {
     let (input, time) = preceded(tag("Time:"), parse_line)(input)?;
     let (input, distance) = preceded(tag("Distance:"), parse_line)(input)?;
     // dbg!(time, distance);
+    // let result = time
+    //     .iter()
+    //     .enumerate()
+    //     .fold(Vec::new(), |mut acc, (i, &time)| {
+    //         acc.push(Race {
+    //             time,
+    //             distance: distance[i],
+    //         });
+    //         acc
+    //     });
     let result = time
-        .iter()
-        .enumerate()
-        .fold(Vec::new(), |mut acc, (i, &time)| {
-            acc.push(Race {
-                time,
-                distance: distance[i],
-            });
-            acc
-        });
+        .into_iter()
+        .zip(distance.into_iter())
+        .map(|(time, distance)| Race { time, distance })
+        .collect();
     Ok((input, result))
 }
 
