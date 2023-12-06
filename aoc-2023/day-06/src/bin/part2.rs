@@ -1,4 +1,4 @@
-use day_05::part1::process;
+use day_06::part2::process;
 
 fn main() {
     let file = include_str!("../../input1.txt");

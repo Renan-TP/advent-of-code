@@ -38,14 +38,18 @@ impl Map {
         source_range.start + offset
     }
     fn smallest_destination_range(&self) -> Range<u64> {
-        self.mappings.iter().fold(u64::MAX..0, |mut range, (_, d)| {
-            if range.start >= d.start {
-                range.start = d.start;
-                range.end = d.end;
-            }
-            // dbg!(&range);
-            range
-        })
+        let (start, end) =
+            self.mappings
+                .iter()
+                .fold((u64::MAX, 0), |(mut start, mut end), (_, d)| {
+                    if start >= d.start {
+                        start = d.start;
+                        end = d.end;
+                    }
+                    // dbg!(&range);
+                    (start, end)
+                });
+        start..end
     }
 }
 fn parse_map(input: &str) -> IResult<&str, Map> {
@@ -101,29 +105,45 @@ fn forward_solution(seeds: Vec<Range<u64>>, maps: Vec<Map>) -> String {
 }
 
 fn backward_solution(seeds: Vec<Range<u64>>, maps: Vec<Map>) -> String {
-    let smallest_destination_range = maps
-        .last()
-        .expect("get last map")
-        .smallest_destination_range();
-    // dbg!(smaller_destination_range);
-    let start_location = smallest_destination_range.start;
-    let seed_min_range = smallest_destination_range
-        .map(|location| {
-            maps.iter()
+    /*Third attemp*/
+    let max_range_location = 0..u64::MAX;
+    let result = max_range_location
+        .into_iter()
+        .find(|&location| {
+            let s = maps
+                .iter()
                 .rev()
-                .fold(location, |location, map| map.navigation_backward(location))
+                .fold(location, |location, map| map.navigation_backward(location));
+            seeds.iter().any(|seed_range| seed_range.contains(&s))
         })
-        .collect::<Vec<u64>>();
-    let (id, source_seed) = seed_min_range
-        .iter()
-        .enumerate()
-        .find(|(_, seed)| seeds.iter().any(|seed_range| seed_range.contains(&seed)))
-        .expect("found smaller source seed");
-    dbg!(maps
-        .iter()
-        .fold(*source_seed, |ok_seed, map| map.navigation_forward(ok_seed))
-        .to_string());
-    (start_location + (id as u64)).to_string()
+        .expect("Get smallest location")
+        .to_string();
+    result
+
+    /*Second attemp*/
+    // let smallest_destination_range = maps
+    //     .last()
+    //     .expect("get last map")
+    //     .smallest_destination_range();
+    // // dbg!(smaller_destination_range);
+    // let start_location = smallest_destination_range.start;
+    // let seed_min_range = smallest_destination_range
+    //     .map(|location| {
+    //         maps.iter()
+    //             .rev()
+    //             .fold(location, |location, map| map.navigation_backward(location))
+    //     })
+    //     .collect::<Vec<u64>>();
+    // let (id, source_seed) = seed_min_range
+    //     .iter()
+    //     .enumerate()
+    //     .find(|(_, seed)| seeds.iter().any(|seed_range| seed_range.contains(&seed)))
+    //     .expect("found smaller source seed");
+    // dbg!(maps
+    //     .iter()
+    //     .fold(*source_seed, |ok_seed, map| map.navigation_forward(ok_seed))
+    //     .to_string());
+    // (start_location + (id as u64)).to_string()
 }
 
 pub fn process(input: &str) -> String {
