@@ -21,15 +21,15 @@ impl Race {
             .filter(|&time| self.formula(time) > self.distance)
             .collect()
     }
-    fn get_win_case_with_math(&self) -> u32 {
+    fn get_win_case_with_math(&self) -> u64 {
         let discriminant = self.time.pow(2) - (4 * self.distance);
-        let range = ((self.time as f32 - (discriminant as f32).sqrt()) / 2f32)
-            ..((self.time as f32 + (discriminant as f32).sqrt()) / 2f32);
+        let range = ((self.time as f64 - (discriminant as f64).sqrt()) / 2f64)
+            ..((self.time as f64 + (discriminant as f64).sqrt()) / 2f64);
         // dbg!(
         //     &range,
-        //     (range.start.floor() as u32 + 1)..=(range.end.ceil() as u32 - 1)
+        //     (range.start.floor() as u64 + 1)..=(range.end.ceil() as u64 - 1)
         // );
-        ((range.start.floor() as u32 + 1)..=(range.end.ceil() as u32 - 1)).count() as u32
+        ((range.start.floor() as u64 + 1)..=(range.end.ceil() as u64 - 1)).count() as u64
     }
 }
 fn parse_line(input: &str) -> IResult<&str, u64> {
