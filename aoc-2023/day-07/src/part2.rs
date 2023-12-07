@@ -146,7 +146,7 @@ pub fn process(input: &str) -> String {
         .iter_mut()
         .progress()
         .for_each(|hand| hand.strength = hand.calculate_strength(&cards_type));
-    hands.sort_by(|a, b| a.order(b, &cards_type));
+    hands.sort_unstable_by(|a, b| a.order(b, &cards_type));
     // dbg!(&hands);
     hands
         .iter()
