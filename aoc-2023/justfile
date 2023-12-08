@@ -16,6 +16,8 @@ www-watch:
    RUST_LOG=info cargo +nightly leptos watch --project www
 www-build:
    cargo +nightly leptos build --project www --release
+solve day part:
+    cargo run -p {{day}} --bin {{part}} --release
 lint day:
     cargo clippy -p {{day}}
 test day part:
