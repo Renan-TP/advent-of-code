@@ -1,10 +1,11 @@
 
 [package]
-name = "{{project-name}}"
+name = "day-08"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 nom = { workspace = true }
 nom-supreme = { workspace = true }
+indicatif = { workspace = true }
 num = { workspace = true }
