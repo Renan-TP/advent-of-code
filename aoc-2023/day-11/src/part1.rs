@@ -17,7 +17,6 @@ struct DataStruct<'a> {
 impl<'a> DataStruct<'a> {
     fn get_pair_set(&self) -> HashSet<(&Coordinate, &Coordinate)> {
         let mut pairs = HashSet::new();
-        let mut count = 0usize;
         for galaxy in &self.galaxies {
             for other_galaxy in &self.galaxies {
                 if galaxy != other_galaxy {
@@ -25,17 +24,14 @@ impl<'a> DataStruct<'a> {
                         || pairs.contains(&(galaxy, other_galaxy))
                     {
                         // dbg!((&galaxy, &other_galaxy));
-                        count += 1;
                     } else {
                         pairs.insert((galaxy, other_galaxy));
                     }
                 } else {
-                    count += 1;
                     // dbg!((&galaxy, &other_galaxy));
                 }
             }
         }
-        // dbg!(count);
         pairs
     }
     fn calculate_path(&self, (a, b): &(Coordinate, Coordinate)) -> usize {
@@ -45,17 +41,12 @@ impl<'a> DataStruct<'a> {
         let double_row_passed = self
             .double_row
             .iter()
-            .filter(|&row| range_of_row_passed.clone().map(|c| c).any(|r| r == *row))
+            .filter(|&row| range_of_row_passed.clone().any(|r| r == *row))
             .count();
         let double_column_passed = self
             .double_colunm
             .iter()
-            .filter(|&column| {
-                range_of_column_passed
-                    .clone()
-                    .map(|c| c)
-                    .any(|r| r == *column)
-            })
+            .filter(|&column| range_of_column_passed.clone().any(|r| r == *column))
             .count();
         // dbg!(&double_column_passed);
         // dbg!(
@@ -76,7 +67,7 @@ impl<'a> DataStruct<'a> {
 }
 
 fn parse(input: &str) -> DataStruct {
-    let line_len = input.find("\n").expect("end line");
+    let line_len = input.find('\n').expect("end line");
     input.lines().enumerate().fold(
         DataStruct {
             image: Vec::new(),
@@ -86,7 +77,7 @@ fn parse(input: &str) -> DataStruct {
         },
         |mut acc_data, (line_index, line)| {
             acc_data.image.push(line.trim());
-            if line.chars().any(|c| c == '#') == false {
+            if !line.chars().any(|c| c == '#') {
                 acc_data.double_row.insert(line_index);
             }
             line.chars().enumerate().for_each(|(x, c)| {
