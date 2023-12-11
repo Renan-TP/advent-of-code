@@ -8,10 +8,15 @@ use std::collections::HashSet;
    7 is a 90-degree bend connecting south and west.
    F is a 90-degree bend connecting south and east.
    . is ground; there is no pipe in this tile.
-   S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
+S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
+*/
+/*
+        [7|F]
+    [L-F]S[7-J]
+        [J|L]
 */
 #[derive(Debug, Clone, Copy)]
-enum Tile {
+enum TileType {
     Vertical = '|' as isize,
     Horizontal = '-' as isize,
     NorthEastL = 'L' as isize,
@@ -23,7 +28,7 @@ enum Tile {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum Position {
+enum RelativePosition {
     // TopLeft,
     Top,
     // TopRight,
@@ -33,29 +38,22 @@ enum Position {
     Bottom,
     // BottomRight,
 }
-// #[derive(Debug, Clone, Copy)]
-// enum Direction {
-//     WestToEastRL,
-//     EastToWestLR,
-//     NorthToSouthUD,
-//     SouthToNorthDU,
-// }
 
-fn map_pipe(c: &char) -> Result<Tile, Tile> {
+fn map_tile(c: &char) -> Result<TileType, TileType> {
     match c {
-        '|' => Ok(Tile::Vertical),
-        '-' => Ok(Tile::Horizontal),
-        'L' => Ok(Tile::NorthEastL),
-        'J' => Ok(Tile::NorthWestJ),
-        '7' => Ok(Tile::SouthWest7),
-        'F' => Ok(Tile::SouthEastF),
-        '.' => Ok(Tile::Ground),
-        'S' => Ok(Tile::StartPoint),
-        _ => Err(Tile::Ground),
+        '|' => Ok(TileType::Vertical),
+        '-' => Ok(TileType::Horizontal),
+        'L' => Ok(TileType::NorthEastL),
+        'J' => Ok(TileType::NorthWestJ),
+        '7' => Ok(TileType::SouthWest7),
+        'F' => Ok(TileType::SouthEastF),
+        '.' => Ok(TileType::Ground),
+        'S' => Ok(TileType::StartPoint),
+        _ => Err(TileType::Ground),
     }
 }
 
-fn parser(input: &str) -> ((usize, usize), Vec<Vec<Tile>>) {
+fn parser(input: &str) -> ((usize, usize), Vec<Vec<TileType>>) {
     let data = input
         .lines()
         .map(|line| line.chars().collect::<Vec<char>>());
@@ -63,7 +61,7 @@ fn parser(input: &str) -> ((usize, usize), Vec<Vec<Tile>>) {
         .clone()
         .map(|line| {
             line.iter()
-                .map(|c| map_pipe(c).expect("should parse to enum"))
+                .map(|c| map_tile(c).expect("should parse to enum"))
                 .collect()
         })
         .collect();
@@ -80,109 +78,151 @@ fn parser(input: &str) -> ((usize, usize), Vec<Vec<Tile>>) {
     ((char_index, line_index), data_result)
 }
 
-/*
-        [7|F]
-    [L-F]S[7-J]
-        [J|L]
-*/
 fn available_direction(
     (x, y): &(usize, usize),
-    data: &Vec<Vec<Tile>>,
-) -> Vec<(Position, (usize, usize))> {
+    data: &Vec<Vec<TileType>>,
+) -> Vec<(RelativePosition, (usize, usize))> {
     let near_points = search_near_points(&(*x, *y), data);
     near_points
         .into_iter()
         .filter(|(p, (c, line))| is_connected(&data[*y][*x], p, &data[*line][*c]))
         .collect()
 }
-fn available_directions_exclude(
+fn available_directions_exclude_source(
     (x, y): &(usize, usize),
-    data: &Vec<Vec<Tile>>,
-    position_compare_to_source: Position,
-) -> (Position, (usize, usize)) {
-    let exculde_direction = match position_compare_to_source {
-        Position::Top => Position::Bottom,
-        Position::Left => Position::Right,
-        Position::Right => Position::Left,
-        Position::Bottom => Position::Top,
+    data: &Vec<Vec<TileType>>,
+    position_relative_to_source: RelativePosition,
+) -> (RelativePosition, (usize, usize)) {
+    let exculde_direction = match position_relative_to_source {
+        RelativePosition::Top => RelativePosition::Bottom,
+        RelativePosition::Left => RelativePosition::Right,
+        RelativePosition::Right => RelativePosition::Left,
+        RelativePosition::Bottom => RelativePosition::Top,
     };
     let near_points = search_near_points(&(*x, *y), data)
         .into_iter()
-        .collect::<Vec<(Position, (usize, usize))>>();
+        .collect::<Vec<(RelativePosition, (usize, usize))>>();
     // dbg!(&near_points);
     let connected_pipes = near_points
         .into_iter()
         .filter(|(p, (c, line))| is_connected(&data[*y][*x], p, &data[*line][*c]))
         .filter(|(p, _)| exculde_direction != *p)
-        .collect::<Vec<(Position, (usize, usize))>>();
+        .collect::<Vec<(RelativePosition, (usize, usize))>>();
     connected_pipes[0]
 }
-/*
-        [7|F]
-    [L-F]S[7-J]
-        [J|L]
-*/
-fn is_connected(start: &Tile, start_position: &Position, pipe: &Tile) -> bool {
-    match start {
-        Tile::Vertical => match start_position {
-            Position::Top => matches!(pipe, Tile::SouthWest7 | Tile::Vertical | Tile::SouthEastF),
-            Position::Bottom => {
-                matches!(pipe, Tile::NorthWestJ | Tile::Vertical | Tile::NorthEastL)
+fn is_connected(
+    start_tile_type: &TileType,
+    position_ralative_to_start_tile: &RelativePosition,
+    connected_pipe: &TileType,
+) -> bool {
+    match start_tile_type {
+        TileType::Vertical => match position_ralative_to_start_tile {
+            RelativePosition::Top => matches!(
+                connected_pipe,
+                TileType::SouthWest7 | TileType::Vertical | TileType::SouthEastF
+            ),
+            RelativePosition::Bottom => {
+                matches!(
+                    connected_pipe,
+                    TileType::NorthWestJ | TileType::Vertical | TileType::NorthEastL
+                )
             }
             _ => false,
         },
-        Tile::Horizontal => match start_position {
-            Position::Left => {
-                matches!(pipe, Tile::Horizontal | Tile::NorthEastL | Tile::SouthEastF)
+        TileType::Horizontal => match position_ralative_to_start_tile {
+            RelativePosition::Left => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::NorthEastL | TileType::SouthEastF
+                )
             }
-            Position::Right => {
-                matches!(pipe, Tile::Horizontal | Tile::SouthWest7 | Tile::NorthWestJ)
-            }
-            _ => false,
-        },
-        Tile::NorthEastL => match start_position {
-            Position::Top => matches!(pipe, Tile::SouthWest7 | Tile::Vertical | Tile::SouthEastF),
-            Position::Right => {
-                matches!(pipe, Tile::Horizontal | Tile::SouthWest7 | Tile::NorthWestJ)
-            }
-            _ => false,
-        },
-        Tile::NorthWestJ => match start_position {
-            Position::Top => matches!(pipe, Tile::SouthWest7 | Tile::Vertical | Tile::SouthEastF),
-            Position::Left => {
-                matches!(pipe, Tile::Horizontal | Tile::NorthEastL | Tile::SouthEastF)
+            RelativePosition::Right => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::SouthWest7 | TileType::NorthWestJ
+                )
             }
             _ => false,
         },
-        Tile::SouthWest7 => match start_position {
-            Position::Left => {
-                matches!(pipe, Tile::Horizontal | Tile::NorthEastL | Tile::SouthEastF)
-            }
-            Position::Bottom => {
-                matches!(pipe, Tile::NorthWestJ | Tile::Vertical | Tile::NorthEastL)
-            }
-            _ => false,
-        },
-        Tile::SouthEastF => match start_position {
-            Position::Right => {
-                matches!(pipe, Tile::Horizontal | Tile::SouthWest7 | Tile::NorthWestJ)
-            }
-            Position::Bottom => {
-                matches!(pipe, Tile::NorthWestJ | Tile::Vertical | Tile::NorthEastL)
+        TileType::NorthEastL => match position_ralative_to_start_tile {
+            RelativePosition::Top => matches!(
+                connected_pipe,
+                TileType::SouthWest7 | TileType::Vertical | TileType::SouthEastF
+            ),
+            RelativePosition::Right => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::SouthWest7 | TileType::NorthWestJ
+                )
             }
             _ => false,
         },
-        Tile::Ground => false,
-        Tile::StartPoint => match start_position {
-            Position::Top => matches!(pipe, Tile::SouthWest7 | Tile::Vertical | Tile::SouthEastF),
-            Position::Left => {
-                matches!(pipe, Tile::Horizontal | Tile::NorthEastL | Tile::SouthEastF)
+        TileType::NorthWestJ => match position_ralative_to_start_tile {
+            RelativePosition::Top => matches!(
+                connected_pipe,
+                TileType::SouthWest7 | TileType::Vertical | TileType::SouthEastF
+            ),
+            RelativePosition::Left => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::NorthEastL | TileType::SouthEastF
+                )
             }
-            Position::Right => {
-                matches!(pipe, Tile::Horizontal | Tile::SouthWest7 | Tile::NorthWestJ)
+            _ => false,
+        },
+        TileType::SouthWest7 => match position_ralative_to_start_tile {
+            RelativePosition::Left => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::NorthEastL | TileType::SouthEastF
+                )
             }
-            Position::Bottom => {
-                matches!(pipe, Tile::NorthWestJ | Tile::Vertical | Tile::NorthEastL)
+            RelativePosition::Bottom => {
+                matches!(
+                    connected_pipe,
+                    TileType::NorthWestJ | TileType::Vertical | TileType::NorthEastL
+                )
+            }
+            _ => false,
+        },
+        TileType::SouthEastF => match position_ralative_to_start_tile {
+            RelativePosition::Right => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::SouthWest7 | TileType::NorthWestJ
+                )
+            }
+            RelativePosition::Bottom => {
+                matches!(
+                    connected_pipe,
+                    TileType::NorthWestJ | TileType::Vertical | TileType::NorthEastL
+                )
+            }
+            _ => false,
+        },
+        TileType::Ground => false,
+        TileType::StartPoint => match position_ralative_to_start_tile {
+            RelativePosition::Top => matches!(
+                connected_pipe,
+                TileType::SouthWest7 | TileType::Vertical | TileType::SouthEastF
+            ),
+            RelativePosition::Left => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::NorthEastL | TileType::SouthEastF
+                )
+            }
+            RelativePosition::Right => {
+                matches!(
+                    connected_pipe,
+                    TileType::Horizontal | TileType::SouthWest7 | TileType::NorthWestJ
+                )
+            }
+            RelativePosition::Bottom => {
+                matches!(
+                    connected_pipe,
+                    TileType::NorthWestJ | TileType::Vertical | TileType::NorthEastL
+                )
             }
         },
     }
@@ -190,72 +230,72 @@ fn is_connected(start: &Tile, start_position: &Position, pipe: &Tile) -> bool {
 
 fn search_near_points(
     (x, y): &(usize, usize),
-    data: &Vec<Vec<Tile>>,
-) -> Vec<(Position, (usize, usize))> {
+    data: &Vec<Vec<TileType>>,
+) -> Vec<(RelativePosition, (usize, usize))> {
     let max_x = data.last().expect("get last").len() - 1;
     let max_y = data.len() - 1;
     // dbg!((max_x, max_y));
     if *x == 0 && *y == 0 {
         return vec![
-            (Position::Right, (1, 0)),
-            (Position::Bottom, (0, 1)),
+            (RelativePosition::Right, (1, 0)),
+            (RelativePosition::Bottom, (0, 1)),
             // (Position::BottomRight, (1, 1)),
         ];
     } else if *x == max_x && *y == max_y {
         return vec![
             // (Position::TopLeft, (max_x - 1, max_y - 1)),
-            (Position::Left, (max_x - 1, max_y)),
-            (Position::Top, (max_x, max_y - 1)),
+            (RelativePosition::Left, (max_x - 1, max_y)),
+            (RelativePosition::Top, (max_x, max_y - 1)),
         ];
     } else if *x == 0 && *y == max_y {
         return vec![
-            (Position::Top, (0, max_y - 1)),
+            (RelativePosition::Top, (0, max_y - 1)),
             // (Position::TopRight, (1, max_y - 1)),
-            (Position::Right, (1, max_y)),
+            (RelativePosition::Right, (1, max_y)),
         ];
     } else if *x == max_x && *y == 0 {
         return vec![
-            (Position::Left, (max_x - 1, 0)),
+            (RelativePosition::Left, (max_x - 1, 0)),
             // (Position::BottomLeft, (max_x - 1, 1)),
-            (Position::Bottom, (max_x, 1)),
+            (RelativePosition::Bottom, (max_x, 1)),
         ];
     } else if *x == 0 {
         return vec![
-            (Position::Top, (0, y - 1)),
-            (Position::Bottom, (0, y + 1)),
+            (RelativePosition::Top, (0, y - 1)),
+            (RelativePosition::Bottom, (0, y + 1)),
             // (Position::TopRight, (1, y - 1)),
-            (Position::Right, (1, *y)),
+            (RelativePosition::Right, (1, *y)),
             // (Position::BottomRight, (1, y + 1)),
         ];
     } else if *y == 0 {
         return vec![
-            (Position::Left, (x - 1, 0)),
+            (RelativePosition::Left, (x - 1, 0)),
             // (Position::BottomLeft, (x - 1, 1)),
-            (Position::Bottom, (*x, 1)),
-            (Position::Right, (x + 1, 0)),
+            (RelativePosition::Bottom, (*x, 1)),
+            (RelativePosition::Right, (x + 1, 0)),
             // (Position::BottomRight, (x + 1, 1)),
         ];
     } else if *x == max_x {
         return vec![
-            (Position::Top, (*x, y - 1)),
-            (Position::Left, (x - 1, *y)),
-            (Position::Bottom, (*x, y + 1)),
+            (RelativePosition::Top, (*x, y - 1)),
+            (RelativePosition::Left, (x - 1, *y)),
+            (RelativePosition::Bottom, (*x, y + 1)),
         ];
     } else if *y == max_y {
         return vec![
-            (Position::Left, (x - 1, *y)),
-            (Position::Top, (*x, y - 1)),
-            (Position::Right, (x + 1, *y)),
+            (RelativePosition::Left, (x - 1, *y)),
+            (RelativePosition::Top, (*x, y - 1)),
+            (RelativePosition::Right, (x + 1, *y)),
         ];
     } else {
         return vec![
             // (Position::TopLeft, (x - 1, y - 1)),
-            (Position::Left, (x - 1, *y)),
+            (RelativePosition::Left, (x - 1, *y)),
             // (Position::BottomLeft, (x - 1, y + 1)),
-            (Position::Top, (*x, y - 1)),
-            (Position::Bottom, (*x, y + 1)),
+            (RelativePosition::Top, (*x, y - 1)),
+            (RelativePosition::Bottom, (*x, y + 1)),
             // (Position::TopRight, (x + 1, y - 1)),
-            (Position::Right, (x + 1, *y)),
+            (RelativePosition::Right, (x + 1, *y)),
             // (Position::BottomRight, (x + 1, y + 1)),
         ];
     }
@@ -272,8 +312,8 @@ pub fn process(input: &str) -> String {
     the_loop.insert(res[1].1);
     // let mut step = 1u64;
     // dbg!(&res);
-    let mut direction_1 = available_directions_exclude(&res[0].1, &data, res[0].0);
-    let mut direction_2 = available_directions_exclude(&res[1].1, &data, res[1].0);
+    let mut direction_1 = available_directions_exclude_source(&res[0].1, &data, res[0].0);
+    let mut direction_2 = available_directions_exclude_source(&res[1].1, &data, res[1].0);
     // step += 1;
     the_loop.insert(direction_1.1);
     the_loop.insert(direction_2.1);
@@ -287,8 +327,8 @@ pub fn process(input: &str) -> String {
             break;
         }
         // dbg!(&direction_1.1, &direction_2.1);
-        direction_1 = available_directions_exclude(&direction_1.1, &data, direction_1.0);
-        direction_2 = available_directions_exclude(&direction_2.1, &data, direction_2.0);
+        direction_1 = available_directions_exclude_source(&direction_1.1, &data, direction_1.0);
+        direction_2 = available_directions_exclude_source(&direction_2.1, &data, direction_2.0);
         the_loop.insert(direction_1.1);
         the_loop.insert(direction_2.1);
         // step += 1;
@@ -305,12 +345,12 @@ pub fn process(input: &str) -> String {
                 .any(|(pipe_x, pipe_y)| x == *pipe_x && y == *pipe_y)
             {
                 match data[y][x] {
-                    Tile::Vertical | Tile::NorthWestJ | Tile::NorthEastL => {
+                    TileType::Vertical | TileType::NorthWestJ | TileType::NorthEastL => {
                         is_inside = !is_inside;
                         // dbg!((x, y, is_inside));
                     }
-                    Tile::StartPoint => {
-                        if res.iter().any(|(p, _)| matches!(p, Position::Top)) {
+                    TileType::StartPoint => {
+                        if res.iter().any(|(p, _)| matches!(p, RelativePosition::Top)) {
                             is_inside = !is_inside;
                         }
                     }
