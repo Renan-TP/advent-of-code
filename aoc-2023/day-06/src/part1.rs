@@ -1,5 +1,3 @@
-use std::result;
-
 use nom::{
     character::complete::{self, multispace0, multispace1, space1},
     multi::separated_list1,
@@ -14,15 +12,15 @@ struct Race {
     distance: u32,
 }
 impl Race {
-    fn formula(&self, button_time: u32) -> u32 {
-        button_time * (self.time - button_time)
-    }
-    fn get_win_case(&self) -> Vec<u32> {
-        (1..self.time)
-            .rev()
-            .filter(|&time| self.formula(time) > self.distance)
-            .collect()
-    }
+    // fn formula(&self, button_time: u32) -> u32 {
+    //     button_time * (self.time - button_time)
+    // }
+    // fn get_win_case(&self) -> Vec<u32> {
+    //     (1..self.time)
+    //         .rev()
+    //         .filter(|&time| self.formula(time) > self.distance)
+    //         .collect()
+    // }
     fn get_win_case_with_math(&self) -> u32 {
         let discriminant = self.time.pow(2) - (4 * self.distance);
         (discriminant as f32).sqrt().ceil() as u32

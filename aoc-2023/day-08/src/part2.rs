@@ -1,6 +1,6 @@
 use indicatif::ProgressIterator;
 use num::Integer;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 // use indicatif::ProgressIterator;
 use nom::{
     bytes::complete::tag,

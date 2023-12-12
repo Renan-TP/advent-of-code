@@ -1,6 +1,5 @@
 use std::ops::Range;
 
-use indicatif::ProgressIterator;
 use nom::{
     bytes::complete::take_until,
     character::complete::{self, line_ending, space1},
@@ -9,23 +8,23 @@ use nom::{
     IResult, Parser,
 };
 use nom_supreme::{tag::complete::tag, ParserExt};
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
 #[derive(Debug)]
 struct Map {
     mappings: Vec<(Range<u64>, Range<u64>)>,
 }
 impl Map {
-    fn navigation_forward(&self, source: u64) -> u64 {
-        let valid_mapping = self
-            .mappings
-            .iter()
-            .find(|(source_range, _)| source_range.contains(&source));
-        let Some((source_range, destination_range)) = valid_mapping else {
-            return source;
-        };
-        let offset = source - source_range.start;
-        destination_range.start + offset
-    }
+    // fn navigation_forward(&self, source: u64) -> u64 {
+    //     let valid_mapping = self
+    //         .mappings
+    //         .iter()
+    //         .find(|(source_range, _)| source_range.contains(&source));
+    //     let Some((source_range, destination_range)) = valid_mapping else {
+    //         return source;
+    //     };
+    //     let offset = source - source_range.start;
+    //     destination_range.start + offset
+    // }
     fn navigation_backward(&self, destination: u64) -> u64 {
         let valid_mapping = self
             .mappings
@@ -37,20 +36,20 @@ impl Map {
         let offset = destination - destination_range.start;
         source_range.start + offset
     }
-    fn smallest_destination_range(&self) -> Range<u64> {
-        let (start, end) =
-            self.mappings
-                .iter()
-                .fold((u64::MAX, 0), |(mut start, mut end), (_, d)| {
-                    if start >= d.start {
-                        start = d.start;
-                        end = d.end;
-                    }
-                    // dbg!(&range);
-                    (start, end)
-                });
-        start..end
-    }
+    // fn smallest_destination_range(&self) -> Range<u64> {
+    //     let (start, end) =
+    //         self.mappings
+    //             .iter()
+    //             .fold((u64::MAX, 0), |(mut start, mut end), (_, d)| {
+    //                 if start >= d.start {
+    //                     start = d.start;
+    //                     end = d.end;
+    //                 }
+    //                 // dbg!(&range);
+    //                 (start, end)
+    //             });
+    //     start..end
+    // }
 }
 fn parse_map(input: &str) -> IResult<&str, Map> {
     // dbg!(input);
@@ -87,22 +86,22 @@ fn parse_input(input: &str) -> IResult<&str, (Vec<Range<u64>>, Vec<Map>)> {
     Ok((input, (seeds, seed_maps)))
 }
 
-fn forward_solution(seeds: Vec<Range<u64>>, maps: Vec<Map>) -> String {
-    let location = seeds
-        .par_iter()
-        .flat_map(|seed_range| seed_range.clone())
-        .collect::<Vec<u64>>();
-    let location = location
-        .into_iter()
-        .progress()
-        .map(|seed| {
-            maps.iter()
-                .fold(seed, |seed, map| map.navigation_forward(seed))
-        })
-        .collect::<Vec<u64>>();
+// fn forward_solution(seeds: Vec<Range<u64>>, maps: Vec<Map>) -> String {
+//     let location = seeds
+//         .par_iter()
+//         .flat_map(|seed_range| seed_range.clone())
+//         .collect::<Vec<u64>>();
+//     let location = location
+//         .into_iter()
+//         .progress()
+//         .map(|seed| {
+//             maps.iter()
+//                 .fold(seed, |seed, map| map.navigation_forward(seed))
+//         })
+//         .collect::<Vec<u64>>();
 
-    location.iter().min().expect("Get min value").to_string()
-}
+//     location.iter().min().expect("Get min value").to_string()
+// }
 
 fn backward_solution(seeds: Vec<Range<u64>>, maps: Vec<Map>) -> String {
     /*Third attemp*/

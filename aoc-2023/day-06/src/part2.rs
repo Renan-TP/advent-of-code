@@ -1,5 +1,5 @@
 use nom::{
-    character::complete::{self, digit1, multispace0, multispace1, space1},
+    character::complete::{digit1, multispace0, multispace1, space1},
     multi::separated_list1,
     sequence::{delimited, preceded},
     IResult,
@@ -12,15 +12,15 @@ struct Race {
     distance: u64,
 }
 impl Race {
-    fn formula(&self, button_time: u64) -> u64 {
-        button_time * (self.time - button_time)
-    }
-    fn get_win_case(&self) -> Vec<u64> {
-        (1..self.time)
-            .rev()
-            .filter(|&time| self.formula(time) > self.distance)
-            .collect()
-    }
+    // fn formula(&self, button_time: u64) -> u64 {
+    //     button_time * (self.time - button_time)
+    // }
+    // fn get_win_case(&self) -> Vec<u64> {
+    //     (1..self.time)
+    //         .rev()
+    //         .filter(|&time| self.formula(time) > self.distance)
+    //         .collect()
+    // }
     fn get_win_case_with_math(&self) -> u64 {
         let discriminant = self.time.pow(2) - (4 * self.distance);
         (discriminant as f64).sqrt() as u64
