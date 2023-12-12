@@ -34,7 +34,7 @@ impl<'a> DataStruct<'a> {
         }
         pairs
     }
-    fn calculate_path(&self, (a, b): &(Coordinate, Coordinate)) -> usize {
+    fn calculate_path(&self, (a, b): &(Coordinate, Coordinate), expansion_ratio: usize) -> usize {
         let mut acc = 0usize;
         let range_of_row_passed = ((a.y).min(b.y))..((a.y).max(b.y));
         let range_of_column_passed = ((a.x).min(b.x))..((a.x).max(b.x));
@@ -43,13 +43,13 @@ impl<'a> DataStruct<'a> {
             .iter()
             .filter(|&row| range_of_row_passed.clone().any(|r| r == *row))
             .count()
-            * (1000000 - 1);
+            * (expansion_ratio - 1);
         let double_column_passed = self
             .double_colunm
             .iter()
             .filter(|&column| range_of_column_passed.clone().any(|r| r == *column))
             .count()
-            * (1000000 - 1);
+            * (expansion_ratio - 1);
         // dbg!(&double_column_passed);
         // dbg!(
         //     (a, b),
@@ -78,24 +78,32 @@ fn parse(input: &str) -> DataStruct {
             double_row: HashSet::new(),
         },
         |mut acc_data, (line_index, line)| {
+            //Build up image by adding lines
             acc_data.image.push(line.trim());
+
+            //If the line have no galaxy, push it index to double_row
             if !line.chars().any(|c| c == '#') {
                 acc_data.double_row.insert(line_index);
             }
+            //Push galaxy coordinate to galaxies HashSet
             line.chars().enumerate().for_each(|(x, c)| {
                 if c == '#' {
                     acc_data.galaxies.insert(Coordinate { x, y: line_index });
                 }
             });
-            let list_of_row_blank = line
+
+            // Filter out all index of column have galaxy (remain blank . index only) in the line
+            let list_of_column_blank = line
                 .chars()
                 .enumerate()
                 .filter(|(_, c)| *c == '.')
                 .map(|(index, _)| index)
                 .collect::<Vec<usize>>();
+
+            // Retain only column index that empty from this line
             acc_data
                 .double_colunm
-                .retain(|c| list_of_row_blank.contains(c));
+                .retain(|c| list_of_column_blank.contains(c));
             acc_data
         },
     )
@@ -109,7 +117,7 @@ pub fn process(input: &str) -> String {
     pairs
         .iter()
         .fold(0usize, |mut acc, &(a, b)| {
-            acc += data.calculate_path(&(*a, *b));
+            acc += data.calculate_path(&(*a, *b), 1000000);
             acc
         })
         .to_string()

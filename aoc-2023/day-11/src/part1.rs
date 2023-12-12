@@ -76,24 +76,32 @@ fn parse(input: &str) -> DataStruct {
             double_row: HashSet::new(),
         },
         |mut acc_data, (line_index, line)| {
+            //Build up image by adding lines
             acc_data.image.push(line.trim());
+
+            //If the line have no galaxy, push it index to double_row
             if !line.chars().any(|c| c == '#') {
                 acc_data.double_row.insert(line_index);
             }
+            //Push galaxy coordinate to galaxies HashSet
             line.chars().enumerate().for_each(|(x, c)| {
                 if c == '#' {
                     acc_data.galaxies.insert(Coordinate { x, y: line_index });
                 }
             });
-            let list_of_row_blank = line
+
+            // Filter out all index of column have galaxy (remain blank . index only) in the line
+            let list_of_column_blank = line
                 .chars()
                 .enumerate()
                 .filter(|(_, c)| *c == '.')
                 .map(|(index, _)| index)
                 .collect::<Vec<usize>>();
+
+            // Retain only column index that empty from this line
             acc_data
                 .double_colunm
-                .retain(|c| list_of_row_blank.contains(c));
+                .retain(|c| list_of_column_blank.contains(c));
             acc_data
         },
     )
