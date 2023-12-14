@@ -161,6 +161,20 @@ version = "0.1.0"
 [[package]]
 name = "day-12"
 version = "0.1.0"
+dependencies = [
+ "indicatif",
+ "itertools",
+]
+
+[[package]]
+name = "day-13"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "nom",
+ "nom-supreme",
+ "num",
+]
 
 [[package]]
 name = "either"
