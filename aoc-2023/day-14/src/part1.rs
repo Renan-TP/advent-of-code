@@ -15,62 +15,107 @@ struct Coordinate {
 }
 
 impl Coordinate {
+    fn get_loads(&self) -> usize {
+        (0..self.max_x)
+            .map(|i| {
+                // dbg!(self.get_load_of_the_column(i));
+                self.get_load_of_the_column(i)
+            })
+            .sum()
+    }
+
     fn get_load_of_the_column(&self, column_number: usize) -> usize {
+        let mut loads = 0usize;
         let rounds: Vec<usize> = self
             .round_rocks
             .iter()
-            .filter(|(x, y)| *x == column_number)
+            .filter(|(x, _)| *x == column_number)
             .map(|(_, y)| *y)
             .sorted()
             .collect();
         let cubes: Vec<usize> = self
             .cube_rocks
             .iter()
-            .filter(|(x, y)| *x == column_number)
+            .filter(|(x, _)| *x == column_number)
             .map(|(_, y)| *y)
             .sorted()
             .collect();
+        let number_of_cubes = cubes.len();
+        let number_of_rounds = rounds.len();
 
-        dbg!((&rounds, &cubes));
+        if number_of_cubes == 0 {
+            return self.calculate_load_before_cube(number_of_rounds);
+        }
 
-        let count = cubes
+        if number_of_rounds == 0 {
+            return 0;
+        }
+
+        if number_of_cubes == 1 {
+            //Check how many before and after
+            let before_rounds = rounds
+                .into_iter()
+                .filter(|round| round < cubes.first().expect("get only cube"))
+                .count();
+            let after_rounds = number_of_rounds - before_rounds;
+
+            // dbg!((before_rounds, after_rounds));
+            return self.calculate_load_before_cube(before_rounds)
+                + self.calculate_load_after_cube(
+                    after_rounds,
+                    *cubes.first().expect("get only cube"),
+                );
+        }
+
+        let before_rounds = rounds
+            .clone()
+            .into_iter()
+            .filter(|round| round < cubes.first().expect("get only cube"))
+            .count();
+        let after_rounds = rounds
+            .clone()
+            .into_iter()
+            .filter(|round| round > cubes.last().expect("get only cube"))
+            .count();
+
+        loads += self.calculate_load_before_cube(before_rounds);
+        loads +=
+            self.calculate_load_after_cube(after_rounds, *cubes.last().expect("get only cube"));
+        // dbg!((&rounds, &cubes));
+
+        let number_of_rounds_and_location = cubes
+            .clone()
             .iter()
             .tuple_windows()
             .map(|(a, b)| {
-                (
-                    rounds
-                        .clone()
-                        .into_iter()
-                        .filter(|x| x > a && x < b)
-                        .count(),
-                    *a,
-                )
+                let number_of_rounds = rounds
+                    .clone()
+                    .into_iter()
+                    .filter(|x| x > a && x < b)
+                    .count();
+                self.calculate_load_after_cube(number_of_rounds, *a)
             })
-            .collect::<Vec<(usize, usize)>>();
-        dbg!(&count);
-        let first_cube = cubes.first().expect("first cube");
-        let last_cube = cubes.last().expect("last cube");
-        let heavy_rounds = rounds
-            .clone()
-            .into_iter()
-            .filter(|r| r < first_cube)
-            .count();
-        let light_rounds = rounds.into_iter().filter(|r| r > last_cube).count();
+            .sum::<usize>();
 
-        let heavy_rounds = self.calculate_load(self.max_y - heavy_rounds + 1, self.max_y);
+        // dbg!(&number_of_rounds_and_location);
 
-        let light_rounds = self.calculate_load(
-            self.max_y - last_cube + 1,
-            self.max_y - last_cube + light_rounds,
-        );
-        dbg!((&heavy_rounds, &light_rounds));
-        todo!()
+        loads += number_of_rounds_and_location;
+        loads
     }
-    fn calculate_load(&self, n: usize, m: usize) -> usize {
-        (m - n + 1) * (m + n) / 2
+    fn calculate_load_before_cube(&self, number_of_rounds: usize) -> usize {
+        if number_of_rounds == 0 {
+            return 0;
+        }
+        number_of_rounds * (self.max_y + self.max_y - number_of_rounds + 1) / 2
     }
-    fn calculate_load_on_coordinate(&self, number_of_rounds: usize, coordinate: usize) -> usize {
-        let load_at_coordinate = self.max_y - coordinate + 1;
+    fn calculate_load_after_cube(&self, number_of_rounds: usize, cube_position: usize) -> usize {
+        if number_of_rounds == 0 {
+            return 0;
+        }
+        let value_of_last_round = self.max_y - (cube_position + number_of_rounds);
+        let value_of_start_round = self.max_y - (cube_position + 1);
+        // dbg!((cube_position, value_of_start_round, value_of_last_round));
+        number_of_rounds * (value_of_start_round + value_of_last_round) / 2
     }
 }
 
@@ -111,12 +156,13 @@ pub fn process(input: &str) -> String {
         },
     );
     // dbg!(&dish_coordinate);
-    let res = dish_coordinate.get_load_of_the_column(2);
+    // let res = dish_coordinate.get_load_of_the_column(2);
+    dish_coordinate.get_loads().to_string()
     // let max_x = input.first().expect("get first line").len();
     // let max_y = input.len();
     // let mut after_tilt = vec![vec!['.'; max_x]; max_y];
 
-    todo!();
+    // todo!();
 }
 #[cfg(test)]
 mod tests {
@@ -124,8 +170,7 @@ mod tests {
 
     #[test]
     fn test_process() {
-        let input = "
-O....#....
+        let input = "O....#....
 O.OO#....#
 .....##...
 OO.#O....O
@@ -140,14 +185,16 @@ O.#..O.#.#
     }
 }
 /*
-OOOO.#.O.. 10
-OO..#....#  9
-OO..O##..O  8
-O..#.OO...  7
-........#.  6
-..#....#.#  5
-..O..#.O.O  4
-..O.......  3
-#....###..  2
-#....#....  1
+O....#....    OOOO.#.O.. 10 0
+O.OO#....#    OO..#....#  9 1
+.....##...    OO..O##..O  8 2
+OO.#O....O    O..#.OO...  7 3
+.O.....O#.    ........#.  6 4
+O.#..O.#.#    ..#....#.#  5 5
+..O..#O..O    ..O..#.O.O  4 6
+.......O..    ..O.......  3 7
+#....###..    #....###..  2 8
+#OO..#....    #....#....  1 9
+
+        34 27 17 10 8 7 7 14 0 12
 */
