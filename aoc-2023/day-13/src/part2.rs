@@ -11,27 +11,6 @@ struct MirrorPattern<'a> {
 }
 
 impl<'a> MirrorPattern<'a> {
-    fn horizontal_reflects(&self) -> Option<(usize, usize)> {
-        for i in 0..self.lines.len() {
-            if i == 0 && self.lines[0] == self.lines[1] {
-                return Some((i, i + 1));
-            }
-            if i == self.lines.len() - 1 {
-                break;
-            }
-
-            if self.lines[i] == self.lines[i + 1] {
-                let max_check_line = (self.lines.len() - 1 - i - 1).min(i);
-                if (1..=max_check_line).all(|j| {
-                    // dbg!(self.lines[i - j], self.lines[i + 1 + j]);
-                    self.lines[i - j] == self.lines[i + 1 + j]
-                }) {
-                    return Some((i, i + 1));
-                }
-            }
-        }
-        None
-    }
     fn horizontal_reflects_with_smudge(&self) -> Option<(usize, usize)> {
         for i in 0..self.lines.len() {
             if i == 0 && self.lines[0] != self.lines[1] {
@@ -136,29 +115,6 @@ impl<'a> MirrorPattern<'a> {
                     rotate_input[i - j] == rotate_input[i + 1 + j]
                 }) {
                     // dbg!((i, i + 1));
-                    return Some((i, i + 1));
-                }
-            }
-        }
-        None
-    }
-    fn vertical_reflects(&self) -> Option<(usize, usize)> {
-        let rotate_input = self.rotate();
-        // let rotate_input: Vec<&str> = rotate_input.iter().map(|s| s.as_str()).collect();
-        for i in 0..rotate_input.len() {
-            if i == 0 && rotate_input[0] == rotate_input[1] {
-                return Some((i, i + 1));
-            }
-            if i == rotate_input.len() - 1 {
-                break;
-            }
-
-            if rotate_input[i] == rotate_input[i + 1] {
-                let max_check_line = (rotate_input.len() - 1 - i - 1).min(i);
-                if (1..=max_check_line).all(|j| {
-                    // dbg!(&rotate_input[i - j], &rotate_input[i + 1 + j]);
-                    rotate_input[i - j] == rotate_input[i + 1 + j]
-                }) {
                     return Some((i, i + 1));
                 }
             }

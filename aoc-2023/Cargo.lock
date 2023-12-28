@@ -76,9 +76,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.17"
+version = "0.8.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06d96137f14f244c37f989d9fff8f95e6c18b918e71f36638f8c49112e4c78f"
+checksum = "c3a430a770ebd84726f584a90ee7f020d28db52c6d02138900f22341f866d39c"
 dependencies = [
  "cfg-if",
 ]
@@ -206,6 +206,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "day-16"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "itertools",
+ "nom",
+ "nom-supreme",
+ "num",
+ "rstest",
+]
+
+[[package]]
+name = "day-20"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "nom",
+ "nom-supreme",
+ "num",
+ "rstest",
+]
+
+[[package]]
 name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -311,6 +334,12 @@ dependencies = [
  "pin-utils",
  "slab",
 ]
+
+[[package]]
+name = "glam"
+version = "0.24.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5418c17512bdf42730f9032c74e1ae39afc408745ebb2acf72fbc4691c17945"
 
 [[package]]
 name = "glob"

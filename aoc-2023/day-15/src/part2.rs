@@ -1,8 +1,11 @@
-use std::{collections::BTreeMap, ops::IndexMut};
 
 enum Operation {
     Remove,
     AddOrReplace,
+}
+
+impl Operation {
+
 }
 #[derive(Debug)]
 struct Step<'a> {
@@ -18,40 +21,6 @@ fn hash_data(input: &str, current_value: u8) -> u8 {
         value %= 256;
         value
     }) as u8
-}
-fn push_in_the_box_of_btree<'a>(step: Step<'a>, boxs: &mut Vec<BTreeMap<&'a str, usize>>) {
-    let box_number = hash_data(step.label, 0) as usize;
-    //Remove/Add lens
-    if let Some(focal_lenght) = step.focal_length {
-        //Bug here, when change value of BTreeMap, the index of it change too
-        boxs[box_number].insert(step.label, focal_lenght);
-        println!(
-            "Insert [{} {}] at box {}. (slot {})",
-            step.label,
-            focal_lenght,
-            box_number,
-            boxs[box_number]
-                .iter()
-                .position(|(&k, _)| k == step.label)
-                .expect("should show index of step")
-                + 1
-        )
-    } else {
-        match boxs[box_number].remove(step.label) {
-            Some(value_remove) => {
-                println!(
-                    "Remove [{} {}] at box {}",
-                    step.label, value_remove, box_number
-                );
-            }
-            None => {
-                println!(
-                    "Not found any [{}] to remove at box {}",
-                    step.label, box_number
-                );
-            }
-        }
-    }
 }
 
 fn push_in_box_of_vec<'a>(step: Step<'a>, boxs: &mut Vec<Vec<(&'a str, usize)>>) {
@@ -114,22 +83,6 @@ fn parse(input: &str) -> Vec<Step> {
             }
         })
         .collect()
-}
-
-fn calculate_hashmap(boxs: &mut Vec<BTreeMap<&str, usize>>) -> usize {
-    boxs.into_iter()
-        .enumerate()
-        .filter(|(_, map)| !map.is_empty())
-        .map(|(box_number, map)| {
-            map.into_iter()
-                .enumerate()
-                .map(|(slot, (_, v))| {
-                    dbg!((&box_number + 1, &slot + 1, *v as usize));
-                    (box_number + 1) * (slot + 1) * (*v as usize)
-                })
-                .sum::<usize>()
-        })
-        .sum()
 }
 
 fn calculate_vecmap(boxs: &mut Vec<Vec<(&str, usize)>>) -> usize {

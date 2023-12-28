@@ -1,0 +1,14 @@
+
+[package]
+name = "day-20"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nom = { workspace = true }
+nom-supreme = { workspace = true }
+num = { workspace = true }
+itertools = { workspace = true }
+
+[dev-dependencies]
+rstest.workspace = true
