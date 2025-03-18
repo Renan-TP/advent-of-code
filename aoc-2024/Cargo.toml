@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "day_*",
+    "day_01",
+    "day_02",
+]
+default-members = ["day_*"]
+resolver = "2"
+
+[workspace.dependencies]
+indicatif = "*"
+nom = "*"
+nom-supreme = "*"
+rayon = "*"
